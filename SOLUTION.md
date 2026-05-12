@@ -12,9 +12,10 @@ python applicant_solution.py
 ### The short task description
 
 The received signal is
-$$
+
+```math
 RX = S + I + \eta = S + F(TX) + E + \eta
-$$
+```
 
 where $S$ is the desired signal ($N \times 4$ matrix), $TX$ is a transmitted signal ($N \times 6$ matrix), so 
 $F(TX)$ is structured interference from transmission, $E$ is an external interference term that is spatially coherent, so it can be represented as a rank-1 matrix, and finally $\eta$ is noise.
@@ -26,16 +27,16 @@ We want to cancel all structured interference: TX-driven part $F(TX)$ and extern
 The baseline solution predicts the transmission interference by solving a ridge regression problem. The code constructs 
 nonlinear features with lags from $TX$ and gets a matrix $X$. Then, for each channel $c$, it solves
 
-$$
+```math
 \beta_c = \arg\min_{\beta_c \in \mathbb{C}^{130}}
 \left\|X\beta_c - y_c\right\|_2^2 + 10^{-6}\left\|\beta_c\right\|_2^2
-$$
+```
 
 Equivalently,
 
-$$
+```math
 \beta_c = \left(X^*X + 10^{-6}I\right)^{-1}X^*y_c
-$$
+```
 
 Because the scorer validates the removed signal using this method and a specific set of nonlinear TX features, we kept the TX-driven 
 interference model unchanged and used the provided `fit_tx_prediction` function in our solution.
@@ -47,16 +48,29 @@ add a rank-1 part for the coherent external component. The task code already has
 wrote our own implementation `rank1_approx` that is simpler and equivalent here.
 
 For rank-1 approximation we use the SVD. If our matrix is $A$, the best approximation is 
-$$
+
+```math
 A \approx u_1 \sigma_1 v_1^*,
-$$
+```
 where $\sigma_1$ is the largest singular value and $u_1$ and $v_1$ are corresponding vectors.
-To compute them we use the spectral decomposition of the Gram matrix. It works because if $A = U \Sigma V^*$ then 
-$A^*A = V \Sigma^* \Sigma V^*$ is a spectral decomposition, so we can get $v_1$ as the principal eigenvector for $A^*A$. After that 
-we can compute $Av_1 = u_1 \sigma_1$ so the desired approximation is
-$$
+To compute them we use the spectral decomposition of the Gram matrix. It works because if
+
+```math
+A = U \Sigma V^*
+```
+
+then
+
+```math
+A^*A = V \Sigma^* \Sigma V^*
+```
+
+is a spectral decomposition, so we can get $v_1$ as the principal eigenvector for this Gram matrix.
+After that we can compute $Av_1 = u_1 \sigma_1$ so the desired approximation is
+
+```math
 u_1 \sigma_1 v_1^* = (A v_1) v_1^*
-$$
+```
 
 The implementation is:
 
